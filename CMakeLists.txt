@@ -1,7 +1,9 @@
+cmake_minimum_required(VERSION 3.8)
 project(fast)
-cmake_minimum_required(VERSION 2.8.3)
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Release)
+SET(CMAKE_CXX_FLAGS "-Wall -Werror -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
 
 IF(DEFINED ENV{ARM_ARCHITECTURE})
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mfpu=neon -march=armv7-a")
@@ -9,8 +11,7 @@ ELSE()
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mmmx -msse -msse -msse2 -msse3 -mssse3 -fomit-frame-pointer")
 ENDIF()
 
-find_package(catkin_simple REQUIRED)
-catkin_simple()
+find_package(ament_cmake REQUIRED)
 
 set(HEADERS
   include/fast/corner_9.h
@@ -32,8 +33,23 @@ ELSE()
   LIST(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/faster_corner_10_sse.cpp)
 ENDIF()
 
-cs_add_library(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
 
 ################################################################################
-cs_install()
-cs_export()
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+ament_export_include_directories(include)
+ament_package()
+
